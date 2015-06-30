@@ -1,0 +1,232 @@
+#!/bin/bash
+# File Name: UM-set
+# Version: 1.0 (matches user-management 2.0)
+# Purpose:  Backend for user-management, acually does the majority of the
+#           work
+# Authors: Dave and minor modifications by anticapitalista
+# Acknowledgements: AntiX forum users for suggestions, testing, and input
+# Special Acknowledgements: anticapitalista for testing, suggestions, input
+
+# Copyright (C) Tuesday, Feb. 7, 2011  by Dave / david.dejong02@gmail.com
+# License: gplv2
+# This file is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#################################################################################################################################################
+TEXTDOMAINDIR=/usr/share/locale
+TEXTDOMAIN=UM-set
+
+if [[ $UID != "0" ]]; then
+ gksu user-management &
+ exit 1 ;
+fi
+function password {
+    echo "PASSWORD SETTING BACKGROUND SCRIPT"
+    USER="$1";
+    PASSWORD="$2";
+    DEFAULTUSER="$3";
+    AUTOLOGIN="$4";
+    ADDUSER="$5";
+    entry="$(mkpasswd -m sha-512 "$PASSWORD" | sed -r 's/([$/])/\\\1/g')"
+    sed -ir "s/^$USER:[^:]\+/$USER:$entry/" /etc/shadow
+    case $AUTOLOGIN in
+    True)
+    sed -ir "s/.*auto_login.*./auto_login    yes/" /etc/slim.conf ;
+    DEFAULTUSER="True";
+    AUTOLOGIN_CHANGE=" to autologin";
+    ;;
+    False)
+    sed -ir "s/.*auto_login.*./#auto_login    yes/" /etc/slim.conf ;
+    AUTOLOGIN_CHANGE="";
+    ;;
+    esac
+    case $DEFAULTUSER in
+    True)
+    sed -ir "s/.*default_user.*./default_user    $USER/" /etc/slim.conf;
+    DEFAULTUSER_CHANGE="default user ($USER) set";
+    ;;
+    False)
+    sed -ir "s/.*default_user.*./#default_user    $USER/" /etc/slim.conf;
+    DEFAULTUSER_CHANGE="";
+    ;;
+    esac
+    
+    yad --title="User-Management" --image="info" --text="$ADDUSER\nPassword set.\n$DEFAULTUSER_CHANGE$AUTOLOGIN_CHANGE"
+}
+
+function add-user {
+    USER="$1";
+    OPTIONS="$2";
+    echo "$USER" > /tmp/user-setup.txt
+    echo "$USER" >> /tmp/user-setup.txt
+    echo "$USER" >> /tmp/user-setup.txt
+    echo "0" >> /tmp/user-setup.txt
+    echo "0" >> /tmp/user-setup.txt
+    echo "0" >> /tmp/user-setup.txt
+    echo "0" >> /tmp/user-setup.txt
+    echo "y" >> /tmp/user-setup.txt
+    adduser $USER --force-badname $OPTIONS < /tmp/user-setup.txt
+}
+
+function repair-user {
+    TMPFILE="/tmp/case.sh";
+    USER="$1";
+    echo "case \$configs in" > $TMPFILE
+    for checked in "$3" "$4" "$5" "$6" "$7" "$8"
+    do
+    file=`echo "$checked" |cut -d "|" -f2`
+    torf=`echo "$checked" |cut -d "|" -f1`
+    if [ "$torf" == "True" ]; then
+    echo "$file)" >> $TMPFILE
+    echo "echo \"Leaving\" " >> $TMPFILE
+    echo ";;" >> $TMPFILE
+    fi
+    done
+    
+    if [ "$2" != "" ]; then
+    FILELIST=`echo $2 | sed "s/|/\ /ig"`
+    for files in "$FILELIST"
+    do
+    echo "$files)" >> $TMPFILE
+    echo "echo \"Leaving\" " >> $TMPFILE
+    echo ";;" >> $TMPFILE
+    done
+    fi
+    
+    echo "*)" >> $TMPFILE
+    echo "rm /home/$USER/\$configs -r >> /dev/null 2>&1" >> $TMPFILE
+    echo ";;" >> $TMPFILE
+    echo "esac" >> $TMPFILE
+    
+    for configs in `ls -a -1 /home/$USER |grep "^\." |sed "1d" |sed "1d"`
+    do
+    . $TMPFILE
+    done
+    
+    rm $TMPFILE;
+    
+    for configs in `ls -a -1 /etc/skel/ |grep "^\." |sed "1d" |sed "1d"`
+    do
+    false | cp -i -R /etc/skel/$configs /home/$USER/ > /dev/null 2>&1
+    chown -R $USER:users /home/$USER/
+    done
+    
+    yad --title="User-Management" --image="info" --text=$"$USER has been restored to defaults\n\nI am now logging you out so your computer is not locked up ;)"
+    logouthelper.sh 
+}
+
+function remove-user {
+    USER="$1";
+    COMPLETE="$2";
+    case $COMPLETE in 
+    True)
+    deluser --force --remove-home $USER &&
+    REMOVED="$USER has been completely removed";
+    ;;
+    False)
+    deluser --force $USER &&
+    REMOVED="$USER has been removed,\n\
+    $USER's files can be found in at $USER's home directory\n\n\
+    Typically this is in /home"
+    ;;
+    esac
+    yad --title="User-Management" --image="info" --text="$REMOVED"
+} 
+
+function help {
+    echo "-p          |Sets password for specified user";
+    echo "Usage:";
+    echo "($0 -p username password defaultUser autoLogin)";
+    echo "username    = your username";
+    echo "password    = your new password";
+    echo "defaultUser = 'True' for slim default user, 'False' if not";
+    echo "autoLogin   = 'True' for slim auto login, 'False' if not";
+    echo "";
+    echo "-a          |Add a user to the system";
+    echo "Usage:";
+    echo "($0 -a username password defaultUser autoLogin)";
+    echo "username    = your username";
+    echo "password    = your new password";
+    echo "defaultUser = 'True' for slim default user, 'False' if not";
+    echo "autoLogin   = 'True' for slim auto login, 'False' if not";
+    echo "";
+    echo "-r          |Repair user, restore config files";
+    echo "($0 -r username list)";
+    echo "username    = your username";
+    echo "list        = '.list|.of|.configs|.to|.save'";
+    echo "Warning: Attempting user repair may restore more applications than you intend!";
+    echo "It is highly recommended that you first do a backup of all file in your home directory";
+    echo "";
+    echo "-rm         |Remove user";
+    echo "($0 -rm username complete)";
+    echo "username    = your username";
+    echo "complete    = 'True' to completely remove user, 'False' to leave home directory";
+    echo "Note: setting complete to 'False' will leave the home directory";
+    echo "Even so it is recomended that the files be backed up";
+    echo "";
+    echo "-rc         |Recover user";
+    echo "Note: Only users that have not been completely removed can be recovered";
+    echo "Usage:";
+    echo "($0 -rc username password defaultUser autoLogin)";
+    echo "username    = your username";
+    echo "password    = your new password";
+    echo "defaultUser = 'True' for slim default user, 'False' if not";
+    echo "autoLogin   = 'True' for slim auto login, 'False' if not";
+    echo "";
+    
+}
+    
+case $1 in
+-p)
+password $2 $3 $4 $5;
+exit;
+;;
+-a)
+USER="$2";
+PASSWORD="$3";
+DEFAULTUSER="$4";
+AUTOLOGIN="$5";
+SHELL="$6";
+OPTIONS="--shell $SHELL";
+add-user $USER "$OPTIONS" &&
+password $USER $PASSWORD $DEFAULTUSER $AUTOLOGIN "User Added";
+exit;
+;;
+-r)
+repair-user $2 $3 "$4|.mozilla" "$5|.claws-mail" "$6|.conkyrc" "$7|.icewm" "$8|.fluxbox" "$9|.jwm" ;
+exit;
+;;
+-rm)
+remove-user $2 $3;
+exit;
+;;
+-rc)
+USER="$2";
+PASSWORD="$3";
+SHELL="$4";
+DEFAULTUSER="$5";
+AUTOLOGIN="$6";
+OLDHOME=`find /home/$USER -maxdepth 0`;
+OPTIONS="--home $OLDHOME";
+add-user $USER "$OPTIONS" &&
+password $USER $PASSWORD $DEFAULTUSER $AUTOLOGIN "User Recovered";
+exit;
+;;
+-h|--help)
+help;
+exit;
+;;
+*)
+echo "not an option";
+;;
+esac

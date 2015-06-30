@@ -1,0 +1,6 @@
+user-management.desktop   /usr/share/applications/antix
+locale/*                  /usr/share/locale 
+changelog.gz              /usr/share/doc/user-management-antix
+copyright                 /usr/share/doc/user-management-antix
+user-management           /usr/local/bin
+UM-set                    /usr/local/bin
