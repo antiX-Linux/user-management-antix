@@ -1,7 +1,7 @@
 #!/bin/bash
 # File Name: UM-set
 # Version: 1.0 (matches user-management 2.0)
-# Purpose:  Backend for user-management, acually does the majority of the
+# Purpose:  Backend for user-management, actually does the majority of the
 #           work
 # Authors: Dave and minor modifications by anticapitalista
 # Acknowledgements: AntiX forum users for suggestions, testing, and input
@@ -121,7 +121,7 @@ function repair-user {
     chown -R $USER:users /home/$USER/
     done
     
-    yad --title="User-Management" --image="info" --text=$"$USER has been restored to defaults\n\nI am now logging you out so your computer is not locked up ;)"
+    yad --title="User-Management" --image="info" --text=$"$USER has been restored to defaults\n\nLogging out so your computer is not locked up ;)"
     logouthelper.sh 
 }
 
@@ -136,7 +136,7 @@ function remove-user {
     False)
     deluser --force $USER &&
     REMOVED="$USER has been removed,\n\
-    $USER's files can be found in at $USER's home directory\n\n\
+    $USER's files can be found in $USER's home directory\n\n\
     Typically this is in /home"
     ;;
     esac
@@ -165,7 +165,7 @@ function help {
     echo "username    = your username";
     echo "list        = '.list|.of|.configs|.to|.save'";
     echo "Warning: Attempting user repair may restore more applications than you intend!";
-    echo "It is highly recommended that you first do a backup of all file in your home directory";
+    echo "It is highly recommended that you first backup all files in your home directory";
     echo "";
     echo "-rm         |Remove user";
     echo "($0 -rm username complete)";

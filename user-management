@@ -163,7 +163,7 @@ class Password:
         buttonbox.show()
         
         okbutton = gtk.Button()
-        icon_button = DesktopToolWidget(_('Apply'), 'dialog-ok', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget(_('Apply'), 'dialog-ok', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         okbutton.add(icon_button)
         okbutton.connect("clicked", self.applyPassword)
         okbutton.set_size_request(100,50)
@@ -171,7 +171,7 @@ class Password:
         okbutton.show()
         
         closebutton = gtk.Button()
-        icon_button = DesktopToolWidget(_('Close'), 'dialog-close', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget(_('Close'), 'dialog-close', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         closebutton.add(icon_button)
         closebutton.connect("clicked", lambda w: gtk.main_quit())
         closebutton.set_size_request(100,50)
@@ -262,13 +262,7 @@ class Add:
         self.combobox = gtk.combo_box_new_text()
         frame.add(self.combobox)
         self.combobox.show()
-        self.combobox.append_text(_("No Shell Selected:"))    
-        self.combobox.append_text('/usr/sbin/nologin')    
-        self.combobox.append_text('/bin/false')    
-        for line in open("/etc/shells", "r").xreadlines():
-            if re.search(r'^/', line):
-                pieces = line.split('\n')
-                self.combobox.append_text(pieces[0])
+        self.combobox.append_text('/bin/bash')    
         
         #combobox.connect('changed', self.changed_cb)
         self.combobox.set_active(0)
@@ -296,7 +290,7 @@ class Add:
         buttonbox.show()
         
         okbutton = gtk.Button()
-        icon_button = DesktopToolWidget(_('Apply'), 'dialog-ok', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget(_('Apply'), 'dialog-ok', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         okbutton.add(icon_button)
         okbutton.connect("clicked", self.applyNewUser)
         okbutton.set_size_request(100,50)
@@ -304,7 +298,7 @@ class Add:
         okbutton.show()
         
         closebutton = gtk.Button()
-        icon_button = DesktopToolWidget(_('Close'), 'dialog-close', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget(_('Close'), 'dialog-close', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         closebutton.add(icon_button)
         closebutton.connect("clicked", lambda w: gtk.main_quit())
         closebutton.set_size_request(100,50)
@@ -319,7 +313,7 @@ class Repair:
         index = self.combobox.get_active()			
         user = model[index][0]
         
-        save1 = self.iceweasel.get_active()			
+        save1 = self.firefox.get_active()			
         save2 = self.claws.get_active()			
         save3 = self.conky.get_active()			
         save4 = self.icewm.get_active()			
@@ -387,10 +381,10 @@ class Repair:
         saveHbox.pack_start(appbox)
         appbox.show()
         
-        self.iceweasel = gtk.CheckButton()
-        self.iceweasel.set_label("iceweasel")
-        appbox.pack_start(self.iceweasel)
-        self.iceweasel.show()
+        self.firefox = gtk.CheckButton()
+        self.firefox.set_label("firefox")
+        appbox.pack_start(self.firefox)
+        self.firefox.show()
         
         self.claws = gtk.CheckButton()
         self.claws.set_label("Claws Mail")
@@ -431,7 +425,7 @@ class Repair:
         buttonbox.show()
         
         okbutton = gtk.Button()
-        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         okbutton.add(icon_button)
         okbutton.connect("clicked", self.applyRepair)
         okbutton.set_size_request(100,50)
@@ -439,7 +433,7 @@ class Repair:
         okbutton.show()
         
         closebutton = gtk.Button()
-        icon_button = DesktopToolWidget('Close', 'dialog-close', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Close', 'dialog-close', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         closebutton.add(icon_button)
         closebutton.connect("clicked", lambda w: gtk.main_quit())
         closebutton.set_size_request(100,50)
@@ -512,7 +506,7 @@ class Remove:
         buttonbox.show()
         
         okbutton = gtk.Button()
-        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         okbutton.add(icon_button)
         okbutton.connect("clicked", self.applyRemove)
         okbutton.set_size_request(100,50)
@@ -520,7 +514,7 @@ class Remove:
         okbutton.show()
         
         closebutton = gtk.Button()
-        icon_button = DesktopToolWidget('Close', 'dialog-close', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Close', 'dialog-close', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         closebutton.add(icon_button)
         closebutton.connect("clicked", lambda w: gtk.main_quit())
         closebutton.set_size_request(100,50)
@@ -624,7 +618,7 @@ class Recover:
         buttonbox.show()
         
         okbutton = gtk.Button()
-        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Apply', 'dialog-ok', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         okbutton.add(icon_button)
         okbutton.connect("clicked", self.applyRecover)
         okbutton.set_size_request(100,50)
@@ -632,7 +626,7 @@ class Recover:
         okbutton.show()
         
         closebutton = gtk.Button()
-        icon_button = DesktopToolWidget('Close', 'dialog-close', 30, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
+        icon_button = DesktopToolWidget('Close', 'dialog-close', 32, gtk.ORIENTATION_HORIZONTAL, wrap = 7)
         closebutton.add(icon_button)
         closebutton.connect("clicked", lambda w: gtk.main_quit())
         closebutton.set_size_request(100,50)
@@ -651,7 +645,7 @@ class NotebookExample:
         self.tab_box.set_spacing(8)
         tab_label = gtk.Label(label)
 
-        pixbuf = get_icon(icon, 48)
+        pixbuf = get_icon(icon, 24)
         tab_icon = gtk.Image()
         tab_icon.set_from_pixbuf(pixbuf)
                 
@@ -689,7 +683,7 @@ class NotebookExample:
         self.notebook.show()
         
         #Start Password Class
-        self.make_icon("changes-allow",_("Password"))
+        self.make_icon("dialog-password",_("Password"))
         self.notebook.append_page(Password().frame, self.tab_box)
         
         #Start add/repair Class

@@ -1,3 +1,15 @@
+user-management-antix (0.3.3) unstable; urgency=medium
+
+  * Changed icons
+
+ -- anticapitalista <antix@operamail.com>  Sat, 22 Apr 2017 17:19:35 +0300
+
+user-management-antix (0.3.2) unstable; urgency=medium
+
+  * Added German, Greek, Russian and Turkish translations
+
+ -- anticapitalista <antix@operamail.com>  Mon, 30 May 2016 18:10:11 +0300
+
 user-management-antix (0.3.1) unstable; urgency=low 
  
   * Added Japanese, Norwegian and Swedish
