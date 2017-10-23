@@ -1,3 +1,9 @@
+user-management-antix (0.3.4) unstable; urgency=medium
+
+  * Show in Applications menu
+
+ -- anticapitalista <antix@operamail.com>  Sat, 07 Oct 2017 18:12:25 +0300
+
 user-management-antix (0.3.3) unstable; urgency=medium
 
   * Changed icons
