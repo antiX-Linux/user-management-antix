@@ -1,0 +1,282 @@
+#!/usr/bin/env python
+#Name: user-management
+#Version: 2.1
+#Depends: python, Gtk
+#Author: Dave (david@daveserver.info)
+# Purpose:  USERS ( adding, removing, recovering, repairing, and login options )
+#           PASSWORDS ( changing user passwords )
+# Authors: Dave and minor modifications by anticapitalista
+# Acknowledgements: AntiX forum _("Users") for suggestions, testing, and input
+# Special Acknowledgements: anticapitalista for testing, suggestions, input
+
+# Copyright (C) Tuesday, Feb. 7, 2011  by Dave / david.dejong02@gmail.com
+# License: gplv2
+# This file is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#################################################################################################################################################
+
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk, GLib
+import os 
+import re
+import gettext
+import sys
+gettext.install("slim-login", "/usr/share/locale")
+
+class Error:
+    def __init__(self, parent, error):
+        dlg = Gtk.MessageDialog(parent, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error")
+        dlg.format_secondary_text(error)
+        dlg.run()
+        dlg.destroy()
+
+class Success:
+    def __init__(self, parent, success):
+         dlg = Gtk.MessageDialog(parent, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, "Success")
+         dlg.format_secondary_text(success)
+         dlg.run()
+         dlg.destroy()
+         
+class UserStore:
+    def __init__(self):
+        self.userstore = Gtk.ListStore(int,str)
+        loop = 0
+        for line in open('/etc/passwd', "r").xreadlines():
+            if re.search(r'10[0-9][0-9]', line):
+                pieces = line.split(':')
+                self.userstore.append([loop, pieces[0]])
+                loop+=1
+
+class ShellStore:
+    def __init__(self):
+        self.shellstore = Gtk.ListStore(int,str)
+        self.shellstore.append([0,'/bin/bash'])
+        self.shellstore.append([1,'/usr/sbin/nologin'])
+        loop = 2
+        for line in open('/etc/shells', "r").xreadlines():
+            if "#" not in line:
+                line = re.sub(r'\n', '', line)
+                self.shellstore.append([loop, line])
+                loop+=1
+                
+class HelpWindow:
+    def __init__(self,text):
+        self.scrolled_window = Gtk.ScrolledWindow(expand=True)
+        self.scrolled_window.set_border_width(10)
+        self.scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
+        self.scrolled_window.add(MakeLabel(_(text)).label)
+
+
+class MakeLabel:
+    def __init__(self,text):
+        self.label = Gtk.Label(text)
+        self.label.set_hexpand(True)
+        self.label.set_size_request(100,40)
+        self.label.set_line_wrap(True)
+        self.label.set_xalign(0)
+
+class Password:
+    def apply(self):
+        print "applying"
+
+    def __init__(self):
+        self.password = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.password.set_margin_left(20)
+        self.password.set_margin_top(20)
+        
+        self.password.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
+        
+        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore().userstore)
+        self.username.set_entry_text_column(1)
+        self.username.set_active(0)
+        self.username.set_hexpand(True)
+        self.password.attach(self.username, 2, 1, 1, 1)
+        
+        self.password.attach(MakeLabel(_('Password:')).label, 1, 2, 1, 1)
+        
+        self.passwd1 = Gtk.Entry()
+        self.passwd1.set_text(_("password"))
+        self.passwd1.set_hexpand(True)
+        self.password.attach(self.passwd1, 2,2,1,1)
+        
+        self.password.attach(MakeLabel(_('Repeat Password:')).label, 1, 3, 1, 1)
+
+        self.passwd2 = Gtk.Entry()
+        self.passwd2.set_text(_("password again"))
+        self.passwd2.set_hexpand(True)
+        self.password.attach(self.passwd2, 2,3,1,1)
+        
+        text="Help:\nChange password by selecting the user you would like to change the password for.\nFollowed by entering the new password and the new password a second time to make sure we have it right"
+        self.password.attach(HelpWindow(_(text)).scrolled_window, 1, 4, 2, 1)
+        
+
+class UserAdd:
+    def apply(self):
+        print "applying add"
+        
+    def __init__(self):
+        self.adduser = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.adduser.set_margin_left(20)
+        self.adduser.set_margin_top(20)
+        
+        self.adduser.attach(MakeLabel(_('Username:')).label, 1, 1, 1, 1)
+        
+        self.username = Gtk.Entry()
+        self.username.set_text(_("antiXDemo"))
+        self.username.set_hexpand(True)
+        self.adduser.attach(self.username, 2, 1, 1, 1)
+        
+        self.adduser.attach(MakeLabel(_('Password:')).label, 1, 2, 1, 1)
+        
+        self.passwd1 = Gtk.Entry()
+        self.passwd1.set_text(_("password"))
+        self.passwd1.set_hexpand(True)
+        self.adduser.attach(self.passwd1, 2,2,1,1)
+        
+        self.adduser.attach(MakeLabel(_('Repeat Password:')).label, 1, 3, 1, 1)
+
+        self.passwd2 = Gtk.Entry()
+        self.passwd2.set_text(_("password again"))
+        self.passwd2.set_hexpand(True)
+        self.adduser.attach(self.passwd2, 2,3,1,1)
+        
+        self.adduser.attach(MakeLabel(_('User Shell:')).label, 1, 4, 1, 1)
+        
+        self.shell =  Gtk.ComboBox.new_with_model_and_entry(ShellStore().shellstore)
+        self.shell.set_entry_text_column(1)
+        self.shell.set_active(0)
+        self.shell.set_hexpand(True)
+        self.adduser.attach(self.shell, 2, 4, 1, 1)
+        
+        text="Help:\nAdd an user by typing the name you would like the user to have.\nFollowed by entering the password and the password a second time to make sure we have it right.\nThen selecting a shell for the user.\nIf you are unsure which shell to select for the user the default is /bin/bash, though others may wish to change this.\n\nFor example:\n/usr/sbin/nologin - Displays that the user is not allowed to login when attempting to log into a console. This is usefull when you are resticting the user to certain services; file sharing, email, etc\n/bin/zsh: common replacement for bash as seen as more functional though it is not installed by default"
+        self.adduser.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
+        
+
+class UserRepair:
+    def apply(self):
+        print "applying repair"
+        
+    def __init__(self):
+        self.repairuser = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.repairuser.set_margin_left(20)
+        self.repairuser.set_margin_top(20)
+        
+class Remove:
+    def apply(self):
+        print "applying remove"
+        
+    def __init__(self):
+        self.removeuser = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.removeuser.set_margin_left(20)
+        self.removeuser.set_margin_top(20)
+        
+class Recover:
+    def apply(self):
+        print "applying repair"
+        
+    def __init__(self):
+        self.recoveruser = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.recoveruser.set_margin_left(20)
+        self.recoveruser.set_margin_top(20)
+        
+class mainWindow(Gtk.Window):
+    def apply(self,widget,option):
+        page = self.notebook.get_current_page()
+        print page
+        case = {
+            0: Password().apply,
+            1: UserAdd().apply,
+            2: UserRepair().apply,
+            3: Remove().apply,
+            4: Recover().apply
+        }
+        func = case.get(page, lambda: "Invalid Page")
+        func()
+
+    def get_icon(self, name, size):
+        theme = Gtk.IconTheme.get_default()
+        return theme.load_icon(name, size, 0)
+        
+    def make_icon(self,icon,label,size):
+        self.icon_box = Gtk.HBox()
+        self.icon_box.set_spacing(8)
+        tab_label = Gtk.Label(label)
+
+        pixbuf = self.get_icon(icon, size)
+        tab_icon = Gtk.Image()
+        tab_icon.set_from_pixbuf(pixbuf)
+                
+        tab_icon.set_size_request(-1, (size * 2))
+        self.icon_box.pack_start(tab_icon, 0,0,0)
+        self.icon_box.pack_start(tab_label, 0,0,0)
+        
+        self.icon_box.show_all()
+
+    def __init__(self):
+        Gtk.Window.__init__(self)
+        self.set_size_request(500,400)
+        self.set_border_width(10)
+        
+        self.mainbox = Gtk.VBox(expand=True)
+        self.add(self.mainbox)
+
+        # Create a new notebook, place the position of the tabs
+        self.notebook = Gtk.Notebook(expand=True)
+        self.notebook.set_tab_pos(0)
+        self.notebook.set_size_request(500,400)
+        self.mainbox.pack_start(self.notebook,0,0,0)
+
+        self.make_icon("lock",_("Password"),24)
+        self.notebook.append_page(Password().password, self.icon_box)
+
+        self.make_icon("list-add",_("Add User"),24)
+        self.notebook.append_page(UserAdd().adduser, self.icon_box)
+        
+        self.make_icon("edit-undo",_("Repair User"),24)
+        self.notebook.append_page(UserRepair().repairuser, self.icon_box)
+        
+        self.make_icon("list-remove",_("Remove"),24)
+        self.notebook.append_page(Remove().removeuser, self.icon_box)
+        
+        self.make_icon("edit-redo",_("Recover"),24)
+        self.notebook.append_page(Recover().recoveruser, self.icon_box)
+
+        #BUTTON BOX
+        buttonbox = Gtk.HButtonBox()
+        buttonbox.set_border_width(10)
+        buttonbox.set_layout(4)
+        self.mainbox.pack_start(buttonbox,0,0,0)
+        
+        self.aply = Gtk.Button()
+        self.make_icon("gtk-apply",_("Apply"),16)
+        self.aply.add(self.icon_box)
+        self.aply.connect("clicked", self.apply, 0)
+        buttonbox.add(self.aply)
+        
+        close = Gtk.Button()
+        self.make_icon("gtk-close",_("Close"),16)
+        close.add(self.icon_box)
+        close.connect("clicked", lambda w: Gtk.main_quit())
+        buttonbox.add(close)
+
+#ROOTCHECK=os.getuid()
+#if ( ROOTCHECK != 0 ):
+#    sys.exit(_("You MUST be root to use this application!"))
+#Var().read()
+win = mainWindow()
+win.connect("delete-event", Gtk.main_quit)
+win.show_all()
+Gtk.main()
