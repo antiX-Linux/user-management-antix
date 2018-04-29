@@ -51,9 +51,13 @@ class Success:
          dlg.destroy()
          
 class UserStore:
-    def __init__(self):
+    def __init__(self,root):
         self.userstore = Gtk.ListStore(int,str)
-        loop = 0
+        if root:
+            self.userstore.append([0, 'root'])
+            loop = 1
+        else:
+            loop = 0
         for line in open('/etc/passwd', "r").xreadlines():
             if re.search(r'10[0-9][0-9]', line):
                 pieces = line.split(':')
@@ -88,9 +92,9 @@ class MakeLabel:
         self.label.set_line_wrap(True)
         self.label.set_xalign(0)
 
-class Password:
+class UserPassword:
     def apply(self):
-        print "applying"
+        print "applying user password"
 
     def __init__(self):
         self.password = Gtk.Grid(column_spacing=20,row_spacing=10)
@@ -99,9 +103,9 @@ class Password:
         
         self.password.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
         
-        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore().userstore)
+        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(True).userstore)
         self.username.set_entry_text_column(1)
-        self.username.set_active(0)
+        self.username.set_active(1)
         self.username.set_hexpand(True)
         self.password.attach(self.username, 2, 1, 1, 1)
         
@@ -125,7 +129,7 @@ class Password:
 
 class UserAdd:
     def apply(self):
-        print "applying add"
+        print "applying user add"
         
     def __init__(self):
         self.adduser = Gtk.Grid(column_spacing=20,row_spacing=10)
@@ -167,41 +171,122 @@ class UserAdd:
 
 class UserRepair:
     def apply(self):
-        print "applying repair"
+        print "applying user repair"
+            
+    def on_cell_toggled(self, widget, path):
+        self.liststore[path][1] = not self.liststore[path][1]
+        
+    def MakeSelector(self, widget):
+        model = self.username.get_model()
+        index = self.username.get_active()
+        print model[index][1]
+        
+        if not widget:
+            self.liststore = Gtk.ListStore(str, bool)
+        else:
+            self.liststore.clear()
+            
+        for item in next(os.walk('/home/'+model[index][1]+'/'))[1]:
+            if re.search(r'^\.', item) and ( item != '.config'):
+                self.liststore.append([item, False])
+        for item in next(os.walk('/home/'+model[index][1]+'/.config/'))[1]:
+            self.liststore.append(['.config/'+item, False])
+        
+        self.config_window = Gtk.ScrolledWindow(expand=True)
+        self.config_window.set_border_width(10)
+        self.config_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
+        
+        self.configview = Gtk.TreeView()
+        self.configview.set_model(self.liststore)
+        
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn(_("Configuration Item"), renderer_text, text=0)
+        self.configview.append_column(column_text)
+
+        renderer_toggle = Gtk.CellRendererToggle()
+        renderer_toggle.connect("toggled", self.on_cell_toggled)
+
+        column_toggle = Gtk.TreeViewColumn(_("Save?"), renderer_toggle, active=1)
+        self.configview.append_column(column_toggle)
+
+        self.config_window.add(self.configview)
+        self.repairuser.attach(self.config_window, 1,2,2,1)
         
     def __init__(self):
         self.repairuser = Gtk.Grid(column_spacing=20,row_spacing=10)
         self.repairuser.set_margin_left(20)
         self.repairuser.set_margin_top(20)
         
-class Remove:
+        self.repairuser.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
+        
+        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(False).userstore)
+        self.username.set_entry_text_column(1)
+        self.username.set_active(0)
+        self.username.set_hexpand(True)
+        self.username.connect('changed', self.MakeSelector)
+        self.repairuser.attach(self.username, 2, 1, 1, 1)
+        
+        self.MakeSelector('')
+        
+        text="Help:\nRepair a user by selecting the user followed by checking off all the configuration files that you know are good and would like to keep.\nThe rest will be removed and replaced with defaults."
+        self.repairuser.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
+        
+class UserRemove:
     def apply(self):
-        print "applying remove"
+        print "applying user remove"
         
     def __init__(self):
         self.removeuser = Gtk.Grid(column_spacing=20,row_spacing=10)
         self.removeuser.set_margin_left(20)
         self.removeuser.set_margin_top(20)
         
-class Recover:
+        self.removeuser.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
+        
+        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(False).userstore)
+        self.username.set_entry_text_column(1)
+        self.username.set_active(0)
+        self.username.set_hexpand(True)
+        self.removeuser.attach(self.username, 2, 1, 1, 1)
+        
+class UserRecover:
     def apply(self):
-        print "applying repair"
+        print "applying user recover"
         
     def __init__(self):
         self.recoveruser = Gtk.Grid(column_spacing=20,row_spacing=10)
         self.recoveruser.set_margin_left(20)
         self.recoveruser.set_margin_top(20)
+                
+class UserGroups:
+    def apply(self):
+        print "applying user groups"
+        
+    def __init__(self):
+        self.usergroups = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.usergroups.set_margin_left(20)
+        self.usergroups.set_margin_top(20)
+                
+class UserClone:
+    def apply(self):
+        print "applying user clone"
+        
+    def __init__(self):
+        self.cloneuser = Gtk.Grid(column_spacing=20,row_spacing=10)
+        self.cloneuser.set_margin_left(20)
+        self.cloneuser.set_margin_top(20)
         
 class mainWindow(Gtk.Window):
     def apply(self,widget,option):
         page = self.notebook.get_current_page()
         print page
         case = {
-            0: Password().apply,
+            0: UserPassword().apply,
             1: UserAdd().apply,
             2: UserRepair().apply,
-            3: Remove().apply,
-            4: Recover().apply
+            3: UserRemove().apply,
+            4: UserRecover().apply,
+            5: UserGroups().apply,
+            6: UserClone().apply
         }
         func = case.get(page, lambda: "Invalid Page")
         func()
@@ -240,7 +325,7 @@ class mainWindow(Gtk.Window):
         self.mainbox.pack_start(self.notebook,0,0,0)
 
         self.make_icon("lock",_("Password"),24)
-        self.notebook.append_page(Password().password, self.icon_box)
+        self.notebook.append_page(UserPassword().password, self.icon_box)
 
         self.make_icon("list-add",_("Add User"),24)
         self.notebook.append_page(UserAdd().adduser, self.icon_box)
@@ -248,11 +333,18 @@ class mainWindow(Gtk.Window):
         self.make_icon("edit-undo",_("Repair User"),24)
         self.notebook.append_page(UserRepair().repairuser, self.icon_box)
         
-        self.make_icon("list-remove",_("Remove"),24)
-        self.notebook.append_page(Remove().removeuser, self.icon_box)
+        self.make_icon("list-remove",_("Remove User"),24)
+        self.notebook.append_page(UserRemove().removeuser, self.icon_box)
         
-        self.make_icon("edit-redo",_("Recover"),24)
-        self.notebook.append_page(Recover().recoveruser, self.icon_box)
+        self.make_icon("edit-redo",_("Recover User"),24)
+        self.notebook.append_page(UserRecover().recoveruser, self.icon_box)
+        
+        self.make_icon("system-users",_("User Groups"),24)
+        self.notebook.append_page(UserGroups().usergroups, self.icon_box)
+        
+        self.make_icon("gtk-copy",_("Clone Users"),24)
+        self.notebook.append_page(UserClone().cloneuser, self.icon_box)
+        
 
         #BUTTON BOX
         buttonbox = Gtk.HButtonBox()
