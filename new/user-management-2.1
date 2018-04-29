@@ -186,10 +186,10 @@ class UserRepair:
         else:
             self.liststore.clear()
             
-        for item in next(os.walk('/home/'+model[index][1]+'/'))[1]:
+        for item in os.listdir('/home/'+model[index][1]+'/'):
             if re.search(r'^\.', item) and ( item != '.config'):
                 self.liststore.append([item, False])
-        for item in next(os.walk('/home/'+model[index][1]+'/.config/'))[1]:
+        for item in os.listdir('/home/'+model[index][1]+'/.config/'):
             self.liststore.append(['.config/'+item, False])
         
         self.config_window = Gtk.ScrolledWindow(expand=True)
