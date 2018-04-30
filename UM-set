@@ -41,22 +41,22 @@ function password {
     sed -ir "s/^$USER:[^:]\+/$USER:$entry/" /etc/shadow
     case $AUTOLOGIN in
     True)
-    sed -ir "s/.*auto_login.*./auto_login    yes/" /etc/slim.conf ;
+    #sed -ir "s/.*auto_login.*./auto_login    yes/" /etc/slim.conf ;
     DEFAULTUSER="True";
     AUTOLOGIN_CHANGE=" to autologin";
     ;;
     False)
-    sed -ir "s/.*auto_login.*./#auto_login    yes/" /etc/slim.conf ;
+    #sed -ir "s/.*auto_login.*./#auto_login    yes/" /etc/slim.conf ;
     AUTOLOGIN_CHANGE="";
     ;;
     esac
     case $DEFAULTUSER in
     True)
-    sed -ir "s/.*default_user.*./default_user    $USER/" /etc/slim.conf;
+    #sed -ir "s/.*default_user.*./default_user    $USER/" /etc/slim.conf;
     DEFAULTUSER_CHANGE="default user ($USER) set";
     ;;
     False)
-    sed -ir "s/.*default_user.*./#default_user    $USER/" /etc/slim.conf;
+    #sed -ir "s/.*default_user.*./#default_user    $USER/" /etc/slim.conf;
     DEFAULTUSER_CHANGE="";
     ;;
     esac
