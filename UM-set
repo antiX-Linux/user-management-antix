@@ -39,21 +39,27 @@ function password {
     ADDUSER="$5";
     entry="$(mkpasswd -m sha-512 "$PASSWORD" | sed -r 's/([$/])/\\\1/g')"
     sed -ir "s/^$USER:[^:]\+/$USER:$entry/" /etc/shadow
-    if [ "$AUTOLOGIN" = "True" ]; then
-      DEFAULTUSER="True"
-      DEFAULTUSER_CHANGE="default user ($USER) set"
-      AUTOLOGIN_CHANGE=" to autologin"
-      sed -ir "s/^.\?default_user.*./default_user    $USER/" /etc/slim.conf
-      sed -ir "s/^.\?auto_login.*./auto_login    yes/" /etc/slim.conf 
-    elif [ "$DEFAULTUSER" = "True" ] && [ "$AUTOLOGIN" = "False" ]; then
-      DEFAULTUSER_CHANGE="default user ($USER) set"
-      AUTOLOGIN_CHANGE=" to no autologin"
-      sed -ir "s/^.\?default_user.*./default_user    $USER/" /etc/slim.conf
-      sed -ir "s/^.\?auto_login.*./#auto_login    yes/" /etc/slim.conf
-    else
-      DEFAULTUSER_CHANGE="No change to default user or";
-      AUTOLOGIN_CHANGE=" autologin";
-    fi
+    case $AUTOLOGIN in
+    True)
+    #sed -ir "s/.*auto_login.*./auto_login    yes/" /etc/slim.conf ;
+    DEFAULTUSER="True";
+    AUTOLOGIN_CHANGE=" to autologin";
+    ;;
+    False)
+    #sed -ir "s/.*auto_login.*./#auto_login    yes/" /etc/slim.conf ;
+    AUTOLOGIN_CHANGE="";
+    ;;
+    esac
+    case $DEFAULTUSER in
+    True)
+    #sed -ir "s/.*default_user.*./default_user    $USER/" /etc/slim.conf;
+    DEFAULTUSER_CHANGE="default user ($USER) set";
+    ;;
+    False)
+    #sed -ir "s/.*default_user.*./#default_user    $USER/" /etc/slim.conf;
+    DEFAULTUSER_CHANGE="";
+    ;;
+    esac
     
     yad --title="User-Management" --image="info" --text="$ADDUSER\nPassword set.\n$DEFAULTUSER_CHANGE$AUTOLOGIN_CHANGE"
 }
