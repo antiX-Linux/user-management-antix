@@ -52,16 +52,16 @@ class Success:
          
 class UserStore:
     def __init__(self,root):
-        self.userstore = Gtk.ListStore(int,str)
+        self.userstore = Gtk.ListStore(str)
         if root:
-            self.userstore.append([0, 'root'])
+            self.userstore.append(['root'])
             loop = 1
         else:
             loop = 0
         for line in open('/etc/passwd', "r").xreadlines():
             if re.search(r'10[0-9][0-9]', line):
                 pieces = line.split(':')
-                self.userstore.append([loop, pieces[0]])
+                self.userstore.append([pieces[0]])
                 loop+=1
 
 class ShellStore:
@@ -87,8 +87,8 @@ class HelpWindow:
 class MakeLabel:
     def __init__(self,text):
         self.label = Gtk.Label(text)
-        self.label.set_hexpand(True)
-        self.label.set_size_request(100,40)
+        self.label.set_hexpand(False)
+        self.label.set_size_request(150,40)
         self.label.set_line_wrap(True)
         self.label.set_xalign(0)
 
@@ -103,8 +103,10 @@ class UserPassword:
         
         self.password.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
         
-        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(True).userstore)
-        self.username.set_entry_text_column(1)
+        self.username =  Gtk.ComboBox.new_with_model(UserStore(True).userstore)
+        renderer_text = Gtk.CellRendererText()
+        self.username.pack_start(renderer_text, True)
+        self.username.add_attribute(renderer_text, "text", 0)
         self.username.set_active(1)
         self.username.set_hexpand(True)
         self.password.attach(self.username, 2, 1, 1, 1)
@@ -179,17 +181,16 @@ class UserRepair:
     def MakeSelector(self, widget):
         model = self.username.get_model()
         index = self.username.get_active()
-        print model[index][1]
         
         if not widget:
             self.liststore = Gtk.ListStore(str, bool)
         else:
             self.liststore.clear()
             
-        for item in os.listdir('/home/'+model[index][1]+'/'):
+        for item in os.listdir('/home/'+model[index][0]+'/'):
             if re.search(r'^\.', item) and ( item != '.config'):
                 self.liststore.append([item, False])
-        for item in os.listdir('/home/'+model[index][1]+'/.config/'):
+        for item in os.listdir('/home/'+model[index][0]+'/.config/'):
             self.liststore.append(['.config/'+item, False])
         
         self.config_window = Gtk.ScrolledWindow(expand=True)
@@ -198,16 +199,16 @@ class UserRepair:
         
         self.configview = Gtk.TreeView()
         self.configview.set_model(self.liststore)
-        
-        renderer_text = Gtk.CellRendererText()
-        column_text = Gtk.TreeViewColumn(_("Configuration Item"), renderer_text, text=0)
-        self.configview.append_column(column_text)
 
         renderer_toggle = Gtk.CellRendererToggle()
         renderer_toggle.connect("toggled", self.on_cell_toggled)
 
         column_toggle = Gtk.TreeViewColumn(_("Save?"), renderer_toggle, active=1)
         self.configview.append_column(column_toggle)
+                
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn(_("Configuration Item"), renderer_text, text=0)
+        self.configview.append_column(column_text)
 
         self.config_window.add(self.configview)
         self.repairuser.attach(self.config_window, 1,2,2,1)
@@ -219,8 +220,10 @@ class UserRepair:
         
         self.repairuser.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
         
-        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(False).userstore)
-        self.username.set_entry_text_column(1)
+        self.username =  Gtk.ComboBox.new_with_model(UserStore(False).userstore)
+        renderer_text = Gtk.CellRendererText()
+        self.username.pack_start(renderer_text, True)
+        self.username.add_attribute(renderer_text, "text", 0)
         self.username.set_active(0)
         self.username.set_hexpand(True)
         self.username.connect('changed', self.MakeSelector)
@@ -228,7 +231,7 @@ class UserRepair:
         
         self.MakeSelector('')
         
-        text="Help:\nRepair a user by selecting the user followed by checking off all the configuration files that you know are good and would like to keep.\nThe rest will be removed and replaced with defaults."
+        text="Help:\nRepair a user by selecting the user followed by checking off all the configuration files that you know are good and would like to keep.\nThe rest will be removed and replaced with defaults.\nIt is recommended that you first do a backup."
         self.repairuser.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
         
 class UserRemove:
@@ -242,11 +245,33 @@ class UserRemove:
         
         self.removeuser.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
         
-        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(False).userstore)
-        self.username.set_entry_text_column(1)
+        self.username =  Gtk.ComboBox.new_with_model(UserStore(False).userstore)
+        renderer_text = Gtk.CellRendererText()
+        self.username.pack_start(renderer_text, True)
+        self.username.add_attribute(renderer_text, "text", 0)
         self.username.set_active(0)
         self.username.set_hexpand(True)
         self.removeuser.attach(self.username, 2, 1, 1, 1)
+        
+        self.removeuser.attach(MakeLabel(_('Remove User?')).label, 1, 2, 1, 1)
+        
+        self.remove = Gtk.RadioButton.new_with_label_from_widget(None, "")
+        self.removeuser.attach(self.remove, 2,2,1,1)
+        
+        self.removeuser.attach(MakeLabel(_('Completely Remove User?')).label, 1, 3, 1, 1)
+        
+        self.complete = Gtk.RadioButton.new_with_label_from_widget(self.remove, "")
+        self.removeuser.attach(self.complete, 2,3,1,1)
+        
+        self.removeuser.attach(MakeLabel(_('Disable User?')).label, 1, 4, 1, 1)
+        
+        self.disable = Gtk.RadioButton.new_with_label_from_widget(self.remove, "")
+        self.removeuser.attach(self.disable, 2,4,1,1)
+        
+        text="Help:\nRemove an user by selecting the user, checking \"Remove User\", and clicking apply. This will remove the user, but leave all of the users files.\n\nCheck \"Completely remove user\" if you would like to remove the user and their files.\n\nCheck \"Disable User\" to only disable the user from from logging in"
+        self.removeuser.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
+        
+        
         
 class UserRecover:
     def apply(self):
@@ -256,6 +281,27 @@ class UserRecover:
         self.recoveruser = Gtk.Grid(column_spacing=20,row_spacing=10)
         self.recoveruser.set_margin_left(20)
         self.recoveruser.set_margin_top(20)
+        
+        self.recoveruser.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
+        
+        self.username =  Gtk.ComboBox.new_with_model_and_entry(UserStore(False).userstore)
+        self.username.set_entry_text_column(0)
+        self.username.set_active(0)
+        self.username.set_hexpand(True)
+        self.recoveruser.attach(self.username, 2, 1, 1, 1)
+        
+        self.recoveruser.attach(MakeLabel(_('Recover User?')).label, 1, 3, 1, 1)
+        
+        self.recover = Gtk.RadioButton.new_with_label_from_widget(None, "")
+        self.recoveruser.attach(self.recover, 2,3,1,1)
+        
+        self.recoveruser.attach(MakeLabel(_('Enable User?')).label, 1, 4, 1, 1)
+        
+        self.enable = Gtk.RadioButton.new_with_label_from_widget(self.recover, "")
+        self.recoveruser.attach(self.enable, 2,4,1,1)
+        
+        text="Help:\nRecover an user by typing the username, checking \"Recover User\", and clicking apply.\nThis will recover an user of the same name if \"Completely Remove User\" was not checked in \"Remove / Recover Users\"; Or the user's files were not manually removed. \n\nSelect an username and check \"Enable User\" if you would also like to enable a previously disabled user account to allow logging in."
+        self.recoveruser.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
                 
 class UserGroups:
     def apply(self):
@@ -315,14 +361,14 @@ class mainWindow(Gtk.Window):
         self.set_size_request(500,400)
         self.set_border_width(10)
         
-        self.mainbox = Gtk.VBox(expand=True)
+        self.mainbox = Gtk.VBox(expand=True, vexpand=True)
         self.add(self.mainbox)
 
         # Create a new notebook, place the position of the tabs
-        self.notebook = Gtk.Notebook(expand=True)
+        self.notebook = Gtk.Notebook(expand=True, vexpand=True)
         self.notebook.set_tab_pos(0)
         self.notebook.set_size_request(500,400)
-        self.mainbox.pack_start(self.notebook,0,0,0)
+        self.mainbox.pack_start(self.notebook,0,1,0)
 
         self.make_icon("lock",_("Password"),24)
         self.notebook.append_page(UserPassword().password, self.icon_box)
@@ -333,10 +379,10 @@ class mainWindow(Gtk.Window):
         self.make_icon("edit-undo",_("Repair User"),24)
         self.notebook.append_page(UserRepair().repairuser, self.icon_box)
         
-        self.make_icon("list-remove",_("Remove User"),24)
+        self.make_icon("list-remove",_("Remove / Disable\nUser"),24)
         self.notebook.append_page(UserRemove().removeuser, self.icon_box)
         
-        self.make_icon("edit-redo",_("Recover User"),24)
+        self.make_icon("edit-redo",_("Recover / Enable\nUser"),24)
         self.notebook.append_page(UserRecover().recoveruser, self.icon_box)
         
         self.make_icon("system-users",_("User Groups"),24)
