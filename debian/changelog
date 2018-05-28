@@ -1,3 +1,9 @@
+user-management-antix (0.3.6) unstable; urgency=medium
+
+  * using older user-management script as new one is broken
+
+ -- anticapitalista <antix@operamail.com>  Sat, 26 May 2018 19:41:50 +0300
+
 user-management-antix (0.3.5) unstable; urgency=medium
 
   * remove Depends:gtkdialog

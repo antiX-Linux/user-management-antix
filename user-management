@@ -147,20 +147,17 @@ class Password:
         loginbox = gtk.VBox()
         frame.add(loginbox)
         loginbox.show()
-	
+        
         self.defaultLogin = gtk.CheckButton()
         self.defaultLogin.set_label(_("Set as Default User"))
         loginbox.pack_start(self.defaultLogin)
-        self.defaultLogin.connect("clicked", lambda action :
-                                  self.autoLogin.set_sensitive(True))
         self.defaultLogin.show()
-  
+        
         self.autoLogin = gtk.CheckButton()
         self.autoLogin.set_label(_("Set User for Automatic Login"))
-        self.autoLogin.set_sensitive(False)
         loginbox.pack_start(self.autoLogin)
         self.autoLogin.show()
- 
+        
         buttonbox = gtk.HButtonBox()
         vbox.pack_start(buttonbox)
         buttonbox.show()
@@ -281,13 +278,10 @@ class Add:
         self.defaultLogin = gtk.CheckButton()
         self.defaultLogin.set_label(_("Set as Default User"))
         loginbox.pack_start(self.defaultLogin)
-        self.defaultLogin.connect("clicked", lambda action :
-                                  self.autoLogin.set_sensitive(True))
         self.defaultLogin.show()
-  
+        
         self.autoLogin = gtk.CheckButton()
         self.autoLogin.set_label(_("Set User for Automatic Login"))
-        self.autoLogin.set_sensitive(False)
         loginbox.pack_start(self.autoLogin)
         self.autoLogin.show()
         
@@ -612,13 +606,10 @@ class Recover:
         self.defaultLogin = gtk.CheckButton()
         self.defaultLogin.set_label(_("Set as Default User"))
         loginbox.pack_start(self.defaultLogin)
-        self.defaultLogin.connect("clicked", lambda action :
-                                  self.autoLogin.set_sensitive(True))
         self.defaultLogin.show()
-  
+        
         self.autoLogin = gtk.CheckButton()
         self.autoLogin.set_label(_("Set User for Automatic Login"))
-        self.autoLogin.set_sensitive(False)
         loginbox.pack_start(self.autoLogin)
         self.autoLogin.show()
         
