@@ -305,12 +305,67 @@ class UserRecover:
                 
 class UserGroups:
     def apply(self):
-        print "applying user groups"
+        print "applying user group"
+            
+    def on_cell_toggled(self, widget, path):
+        self.liststore[path][1] = not self.liststore[path][1]
+        
+    def MakeSelector(self, widget):
+        model = self.username.get_model()
+        index = self.username.get_active()
+        
+        if not widget:
+            self.liststore = Gtk.ListStore(str, bool)
+        else:
+            self.liststore.clear()
+        
+        for line in open('/etc/group', "r").xreadlines():
+            pieces = line.split(':')
+            if re.search(r''+model[index][0], line):
+                self.liststore.append([pieces[0], True])
+            else:
+                self.liststore.append([pieces[0], False])
+            
+        self.config_window = Gtk.ScrolledWindow(expand=True)
+        self.config_window.set_border_width(10)
+        self.config_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
+        
+        self.configview = Gtk.TreeView()
+        self.configview.set_model(self.liststore)
+
+        renderer_toggle = Gtk.CellRendererToggle()
+        renderer_toggle.connect("toggled", self.on_cell_toggled)
+
+        column_toggle = Gtk.TreeViewColumn(_("Save?"), renderer_toggle, active=1)
+        self.configview.append_column(column_toggle)
+                
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn(_("Configuration Item"), renderer_text, text=0)
+        self.configview.append_column(column_text)
+
+        self.config_window.add(self.configview)
+        self.usergroups.attach(self.config_window, 1,2,2,1)
         
     def __init__(self):
         self.usergroups = Gtk.Grid(column_spacing=20,row_spacing=10)
         self.usergroups.set_margin_left(20)
         self.usergroups.set_margin_top(20)
+        
+        self.usergroups.attach(MakeLabel(_('User:')).label, 1, 1, 1, 1)
+        
+        self.username =  Gtk.ComboBox.new_with_model(UserStore(False).userstore)
+        renderer_text = Gtk.CellRendererText()
+        self.username.pack_start(renderer_text, True)
+        self.username.add_attribute(renderer_text, "text", 0)
+        self.username.set_active(0)
+        self.username.set_hexpand(True)
+        self.username.connect('changed', self.MakeSelector)
+        self.usergroups.attach(self.username, 2, 1, 1, 1)
+        
+        self.MakeSelector('')
+        
+        text="Help:\nSet the groups the user belongs to by selecting an user followed by selecting the groups that you would like the user to be part of.\nThe rest that are unselected (or have been deselected) the user will not be part of."
+        self.usergroups.attach(HelpWindow(_(text)).scrolled_window, 1, 5, 2, 1)
                 
 class UserClone:
     def apply(self):
